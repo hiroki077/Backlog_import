@@ -3,8 +3,10 @@ import csv
 import re
 
 #API
-api_key = 'PqN24a136oO51xeirLkfIHWUGBgX7XraInoeNbvgOVZwIUsAQGfnPIzuKjK4Cv9j'
-space_id = 'rukitech'
+print("please enter your api_key")
+api_key = input()
+print('please enter your space ID')
+space_id = input()
 project_prefix = 'R'
 
 # name of csv
@@ -77,20 +79,46 @@ with open(csv_filename, mode='w', newline='', encoding='utf-8') as file:
 
                         if not (comment_text and created_user):
                             continue
-                        
-                        
-                        match = re.search(r'\d+-\d+', title)
+       
+       
+    
+                        hyphen_match = re.search(r'\d+-\d+', title)
 
-                        if match:
-                            castomer_number = match.group()
+                        if hyphen_match:
+                            castomer_number = hyphen_match.group()
                         else:
-                            number_only = re.search(r'\d+', title)
-                            castomer_number = number_only.group() if number_only else ''
+                            # if there are no '-', find frist number
+                            match = re.match(r'\s*(\d+)', title)
 
-                        # castomer_numberを必ず文字列化して変換
+                            if match:
+                                castomer_number = match.group(1)
+                            else:
+                                # find firs cala
+                                number_only = re.search(r'\d+', title)
+                                if number_only:
+                                    number_start = number_only.start()
+                                    if len(title) > number_start + len(number_only.group()):
+                                        next_char = title[number_start + len(number_only.group())]
+                                        if next_char == '/':
+                                            castomer_number = '' 
+                                        else:
+                                            castomer_number = number_only.group()
+                                    else:
+                                        castomer_number = number_only.group()
+                                else:
+                                    castomer_number = ''
+
+                        # check of -
+                        if castomer_number and '-' not in castomer_number:
+                            if len(castomer_number) < 3:
+                                castomer_number = ''  
+
+                        # castomer_number -> str
                         castomer_number = str(castomer_number)
                         castomer_number = replace_circled_with_translate(castomer_number)
-                        castomer_number = f'="{castomer_number}"' 
+                        castomer_number = f'="{castomer_number}"' if castomer_number else ''
+
+
 
 
                         # circul number -> normal number
@@ -103,7 +131,7 @@ with open(csv_filename, mode='w', newline='', encoding='utf-8') as file:
                     min_id = last_comment_id
 
                 else:
-                    print(f"コメント取得エラー ({comment_response.status_code}): {comment_response.text}")
+                    print(f"error cannot get info of comments ({comment_response.status_code}): {comment_response.text}")
                     break
 
             issue_number += 1 
@@ -115,8 +143,7 @@ with open(csv_filename, mode='w', newline='', encoding='utf-8') as file:
             continue
 
         else:
-            # それ以外のエラー（認証エラーなど）は止める
-            print(f"課題情報取得エラー ({issue_response.status_code}): {issue_response.text}")
+            print(f"error cannot get issue_response info ({issue_response.status_code}): {issue_response.text}")
             break
 
     print(f"\n✅ {csv_filename} done")
