@@ -1,4 +1,4 @@
-# Backlog_Coment_downloader
+# Backlog_Comment_downloader
 
 
 This is a Python script that exports comments from Backlog issues.
